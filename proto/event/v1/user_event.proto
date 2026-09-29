@@ -1,0 +1,14 @@
+// Pub/Sub スキーマとしても登録するため、以下の制約を守ること
+// - トップレベルの message は 1 つだけ（ネストは可）
+// - 他ファイルの import は不可
+edition = "2023";
+
+package gcptest.event.v1;
+
+option go_package = "gcp-test/gen/event/v1;eventv1";
+
+message UserEvent {
+  string user_id = 1;
+  string action = 2;
+  int64 occurred_at_unix = 3;
+}
