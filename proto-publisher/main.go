@@ -10,6 +10,7 @@ import (
 	"cloud.google.com/go/pubsub/v2"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/proto"
 
 	eventv1 "gcp-test/gen/event/v1"
@@ -20,11 +21,13 @@ func main() {
 	topicID := flag.String("topic", "user-event-topic", "Pub/Sub topic ID")
 	userID := flag.String("user-id", "user-123", "UserEvent.user_id")
 	action := flag.String("action", "login", "UserEvent.action")
+	device := flag.String("device", "", "UserEvent.device（空なら未設定）")
+	encoding := flag.String("encoding", "binary", "メッセージのエンコーディング（binary / json）。トピックの設定に合わせる")
 	raw := flag.String("raw", "", "proto を使わずこの文字列をそのまま送る（スキーマ違反の確認用）")
 	invalid := flag.Bool("invalid", false, "proto として解釈できないバイト列を送る（スキーマ違反の確認用）")
 	flag.Parse()
 
-	data, err := buildData(*userID, *action, *raw, *invalid)
+	data, err := buildData(*userID, *action, *device, *encoding, *raw, *invalid)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "build message failed: %v\n", err)
 		os.Exit(2)
@@ -57,19 +60,30 @@ func main() {
 	fmt.Printf("ACCEPTED: message_id=%s\n", serverID)
 }
 
-func buildData(userID, action, raw string, invalid bool) ([]byte, error) {
+func buildData(userID, action, device, encoding, raw string, invalid bool) ([]byte, error) {
 	switch {
 	case invalid:
 		// 終端しない varint なので proto のバイナリとしてパースできない
 		return []byte{0xff, 0xff, 0xff}, nil
 	case raw != "":
 		return []byte(raw), nil
+	}
+
+	event := &eventv1.UserEvent{
+		UserId:         proto.String(userID),
+		Action:         proto.String(action),
+		OccurredAtUnix: proto.Int64(time.Now().Unix()),
+	}
+	if device != "" {
+		event.Device = proto.String(device)
+	}
+
+	switch encoding {
+	case "binary":
+		return proto.Marshal(event)
+	case "json":
+		return protojson.MarshalOptions{UseProtoNames: true}.Marshal(event)
 	default:
-		// トピックの encoding が BINARY なので proto のバイナリ形式で送る
-		return proto.Marshal(&eventv1.UserEvent{
-			UserId:         proto.String(userID),
-			Action:         proto.String(action),
-			OccurredAtUnix: proto.Int64(time.Now().Unix()),
-		})
+		return nil, fmt.Errorf("unknown encoding: %s", encoding)
 	}
 }

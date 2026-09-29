@@ -30,6 +30,7 @@ type UserEvent struct {
 	UserId         *string                `protobuf:"bytes,1,opt,name=user_id,json=userId" json:"user_id,omitempty"`
 	Action         *string                `protobuf:"bytes,2,opt,name=action" json:"action,omitempty"`
 	OccurredAtUnix *int64                 `protobuf:"varint,3,opt,name=occurred_at_unix,json=occurredAtUnix" json:"occurred_at_unix,omitempty"`
+	Device         *string                `protobuf:"bytes,4,opt,name=device" json:"device,omitempty"`
 	unknownFields  protoimpl.UnknownFields
 	sizeCache      protoimpl.SizeCache
 }
@@ -85,15 +86,23 @@ func (x *UserEvent) GetOccurredAtUnix() int64 {
 	return 0
 }
 
+func (x *UserEvent) GetDevice() string {
+	if x != nil && x.Device != nil {
+		return *x.Device
+	}
+	return ""
+}
+
 var File_event_v1_user_event_proto protoreflect.FileDescriptor
 
 const file_event_v1_user_event_proto_rawDesc = "" +
 	"\n" +
-	"\x19event/v1/user_event.proto\x12\x10gcptest.event.v1\"f\n" +
+	"\x19event/v1/user_event.proto\x12\x10gcptest.event.v1\"~\n" +
 	"\tUserEvent\x12\x17\n" +
 	"\auser_id\x18\x01 \x01(\tR\x06userId\x12\x16\n" +
 	"\x06action\x18\x02 \x01(\tR\x06action\x12(\n" +
-	"\x10occurred_at_unix\x18\x03 \x01(\x03R\x0eoccurredAtUnixB\x1fZ\x1dgcp-test/gen/event/v1;eventv1b\beditionsp\xe8\a"
+	"\x10occurred_at_unix\x18\x03 \x01(\x03R\x0eoccurredAtUnix\x12\x16\n" +
+	"\x06device\x18\x04 \x01(\tR\x06deviceB\x1fZ\x1dgcp-test/gen/event/v1;eventv1b\beditionsp\xe8\a"
 
 var (
 	file_event_v1_user_event_proto_rawDescOnce sync.Once
